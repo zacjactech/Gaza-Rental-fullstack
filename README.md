@@ -90,6 +90,64 @@ yarn dev
 
 7. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
+## Deployment on Vercel
+
+This project is configured for easy deployment on Vercel. Follow these steps to deploy:
+
+1. Create a Vercel account at [vercel.com](https://vercel.com) if you don't have one already.
+
+2. Install the Vercel CLI (optional):
+
+```bash
+npm install -g vercel
+```
+
+3. Deploy using one of these methods:
+
+   **Option 1: Deploy from the Vercel Dashboard**
+
+   - Fork or push your code to a GitHub repository
+   - Log in to your Vercel account
+   - Click "New Project" and import your GitHub repository
+   - Configure your project:
+     - Set the framework preset to "Next.js"
+     - Add all environment variables from your `.env.local` file
+     - Click "Deploy"
+
+   **Option 2: Deploy using the Vercel CLI**
+
+   ```bash
+   # Login to Vercel
+   vercel login
+
+   # Deploy from your project directory
+   vercel
+
+   # Follow the prompts to configure your project
+   ```
+
+4. After deployment, Vercel will provide you with a production URL for your application.
+
+5. Set up environment variables in the Vercel dashboard:
+   - Go to your project settings
+   - Navigate to the "Environment Variables" section
+   - Add all required environment variables from your `.env.local` file
+
+### Automatic Deployments
+
+Once connected to a Git repository, Vercel will automatically deploy:
+
+- Production deployments when you push to the main branch
+- Preview deployments when you create pull requests
+
+### Custom Domain
+
+To add a custom domain to your Vercel deployment:
+
+1. Go to your project in the Vercel dashboard
+2. Click on "Settings" > "Domains"
+3. Add your domain and follow the verification instructions
+
 ## MongoDB Atlas Setup
 
 This project uses MongoDB Atlas as the database. To set up your own MongoDB Atlas database:

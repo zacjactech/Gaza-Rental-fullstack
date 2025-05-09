@@ -524,6 +524,14 @@ export const translations: TranslationType = {
           content: 'If you have any questions about this Privacy Policy, please contact us at privacy@gazarenter.com.'
         }
       }
+    },
+    mapView: {
+      title: 'Map View',
+      subtitle: 'Find properties by location',
+      filters: 'Filters',
+      resetFilters: 'Reset all',
+      noResults: 'No properties found matching your criteria',
+      clearFilters: 'Clear Filters'
     }
   },
   sw: {
@@ -1053,6 +1061,14 @@ export const translations: TranslationType = {
           content: 'Ikiwa una maswali yoyote kuhusu Sera hii ya Faragha, tafadhali wasiliana nasi kwa privacy@gazarenter.com.'
         }
       }
+    },
+    mapView: {
+      title: 'Ramani',
+      subtitle: 'Tafuta nyumba kwa eneo',
+      filters: 'Chuja',
+      resetFilters: 'Ondoa chuja zote',
+      noResults: 'Hakuna nyumba zinazolingana na vigezo vyako',
+      clearFilters: 'Ondoa Chuja'
     }
   }
 }; 
