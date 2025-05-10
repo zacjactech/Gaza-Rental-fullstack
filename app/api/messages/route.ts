@@ -10,71 +10,35 @@ import { authService } from '@/lib/services/auth-service';
 // GET /api/messages - Get all conversations for the current user
 export async function GET(request: Request) {
   try {
-    // Get the token from the cookies or authorization header
-    const token = request.headers.get('cookie')?.split('; ')
-      .find(cookie => cookie.startsWith('token='))
-      ?.split('=')[1] || 
-      request.headers.get('authorization')?.split(' ')[1];
+    await connectToDatabase();
     
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const messages = await Message.find()
+      .populate('sender', 'name email avatar')
+      .populate('recipient', 'name email avatar')
+      .populate('property', 'title image')
+      .sort({ createdAt: -1 })
+      .lean();
 
-    // Validate token and get user
-    const user = await authService.validateToken(token);
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Ensure database is connected
-    await getConnectionPromise();
-
-    // Get all messages where the user is either sender or recipient
-    const messages = await Message.find({
-      $or: [
-        { 'sender._id': user._id },
-        { 'recipient._id': user._id }
-      ]
-    })
-    .sort({ createdAt: -1 })
-    .populate('sender', 'name email avatar')
-    .populate('recipient', 'name email avatar')
-    .populate('property', 'title image');
-
-    // Group messages by conversation (property + other participant)
-    const conversations = messages.reduce((acc: any[], message) => {
-      const otherParticipant = message.sender._id.toString() === user._id.toString() 
-        ? message.recipient 
-        : message.sender;
-      
-      const conversationId = `${message.property._id}-${otherParticipant._id}`;
-      
-      const existingConversation = acc.find(c => c.id === conversationId);
-      
-      if (existingConversation) {
-        existingConversation.messages.push(message);
-        if (message.createdAt > existingConversation.lastMessage.createdAt) {
-          existingConversation.lastMessage = message;
-        }
-        if (!message.read && message.recipient._id.toString() === user._id.toString()) {
-          existingConversation.unreadCount++;
-        }
-      } else {
-        acc.push({
-          id: conversationId,
-          messages: [message],
-          participants: [message.sender, message.recipient],
-          property: message.property,
-          lastMessage: message,
-          unreadCount: !message.read && message.recipient._id.toString() === user._id.toString() ? 1 : 0
-        });
-      }
-      
-      return acc;
-    }, []);
-
-    return NextResponse.json(conversations);
+    return NextResponse.json(messages.map((message: any) => ({
+      ...message,
+      _id: message._id.toString(),
+      sender: {
+        ...message.sender,
+        _id: message.sender._id.toString()
+      },
+      recipient: {
+        ...message.recipient,
+        _id: message.recipient._id.toString()
+      },
+      property: message.property ? {
+        ...message.property,
+        _id: message.property._id.toString()
+      } : null,
+      createdAt: message.createdAt?.toISOString(),
+      updatedAt: message.updatedAt?.toISOString()
+    })));
   } catch (error) {
+    console.error('Error fetching messages:', error);
     return NextResponse.json(
       { error: handleError(error) },
       { status: 500 }

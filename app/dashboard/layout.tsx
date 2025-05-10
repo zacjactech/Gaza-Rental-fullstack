@@ -21,6 +21,8 @@ import { useLanguage } from "@/contexts/LanguageContext"
 import { translations } from "@/translations"
 import { MessageNotificationBadge } from "@/components/MessageNotificationBadge"
 
+export const dynamic = 'force-dynamic';
+
 interface DashboardLayoutProps {
   children: React.ReactNode
 }

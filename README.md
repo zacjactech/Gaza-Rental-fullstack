@@ -102,7 +102,14 @@ This project is configured for easy deployment on Vercel. Follow these steps to 
 npm install -g vercel
 ```
 
-3. Deploy using one of these methods:
+3. Prepare your project for deployment:
+
+```bash
+# Clean, install dependencies, lint, and build the project
+npm run prepare-deploy
+```
+
+4. Deploy using one of these methods:
 
    **Option 1: Deploy from the Vercel Dashboard**
 
@@ -117,21 +124,44 @@ npm install -g vercel
    **Option 2: Deploy using the Vercel CLI**
 
    ```bash
-   # Login to Vercel
-   vercel login
+   # Deploy using our deployment script
+   # For Windows:
+   deploy.bat
 
-   # Deploy from your project directory
-   vercel
+   # For Unix/Linux/macOS:
+   bash deploy.sh
 
-   # Follow the prompts to configure your project
+   # Or manually:
+   vercel --prod
    ```
 
-4. After deployment, Vercel will provide you with a production URL for your application.
+5. After deployment, Vercel will provide you with a production URL for your application.
 
-5. Set up environment variables in the Vercel dashboard:
+6. Set up environment variables in the Vercel dashboard:
    - Go to your project settings
    - Navigate to the "Environment Variables" section
    - Add all required environment variables from your `.env.local` file
+
+### Project Maintenance Scripts
+
+This project includes several utility scripts to help with maintenance and deployment:
+
+- **clean**: Remove build artifacts and temporary files
+
+  ```bash
+  npm run clean
+  ```
+
+- **check-env**: Verify that all required environment variables are set
+
+  ```bash
+  npm run check-env
+  ```
+
+- **prepare-deploy**: Clean, install dependencies, lint, and build the project
+  ```bash
+  npm run prepare-deploy
+  ```
 
 ### Automatic Deployments
 

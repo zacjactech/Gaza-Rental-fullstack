@@ -8,55 +8,33 @@ import { verifyToken } from '@/lib/services/auth-service';
 export async function GET(request: Request) {
   try {
     await connectToDatabase();
-    
-    // Get token from authorization header or cookies
-    let token = request.headers.get('authorization')?.split(' ')[1];
-    
-    // If no token in authorization header, try to get it from cookies
-    if (!token) {
-      token = request.headers.get('cookie')?.split('; ')
-        .find(cookie => cookie.startsWith('token='))
-        ?.split('=')[1];
-    }
-    
-    if (!token) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
-    
-    // Verify token and get user
-    const userData = verifyToken(token);
-    
-    // Build query based on user role
-    const query: any = {};
-    if (userData.role === 'tenant') {
-      query.tenant = userData.id;
-    } else if (userData.role === 'landlord') {
-      query.landlordId = userData.id;
-    }
-    
-    // Get search params
     const { searchParams } = new URL(request.url);
-    const status = searchParams.get('status');
-    if (status) {
-      query.status = status;
-    }
-    
-    // Get bookings with populated fields
+    const userId = searchParams.get('userId');
+    const propertyId = searchParams.get('propertyId');
+
+    const query: any = {};
+    if (userId) query.userId = userId;
+    if (propertyId) query.propertyId = propertyId;
+
     const bookings = await Booking.find(query)
-      .populate('property', 'title location price image')
-      .populate('tenant', 'name email phone avatar')
-      .populate('landlordId', 'name email phone')
-      .sort({ createdAt: -1 })
+      .populate('userId', 'name email avatar')
+      .populate('propertyId')
+      .sort({ startDate: -1 })
       .lean();
-    
-    return NextResponse.json(bookings);
+
+    return NextResponse.json(bookings.map((booking: any) => ({
+      ...booking,
+      _id: booking._id.toString(),
+      userId: typeof booking.userId === 'object' ? booking.userId._id.toString() : booking.userId,
+      propertyId: typeof booking.propertyId === 'object' ? booking.propertyId._id.toString() : booking.propertyId,
+      startDate: booking.startDate?.toISOString(),
+      createdAt: booking.createdAt?.toISOString(),
+      updatedAt: booking.updatedAt?.toISOString()
+    })));
   } catch (error) {
     console.error('Error fetching bookings:', error);
     return NextResponse.json(
-      { error: handleError(error) },
+      { error: 'Internal Server Error' },
       { status: 500 }
     );
   }
@@ -65,64 +43,15 @@ export async function GET(request: Request) {
 // POST /api/bookings - Create a new booking
 export async function POST(request: Request) {
   try {
+    const body = await request.json();
     await connectToDatabase();
-    
-    // Get token from authorization header or cookies
-    let token = request.headers.get('authorization')?.split(' ')[1];
-    
-    // If no token in authorization header, try to get it from cookies
-    if (!token) {
-      token = request.headers.get('cookie')?.split('; ')
-        .find(cookie => cookie.startsWith('token='))
-        ?.split('=')[1];
-    }
-    
-    if (!token) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
-    
-    // Verify token and get user
-    const userData = verifyToken(token);
-    
-    // Parse request body
-    const data = await request.json();
-    
-    // Validate required fields
-    const requiredFields = ['propertyId', 'startDate', 'duration'];
-    
-    for (const field of requiredFields) {
-      if (!data[field]) {
-        return NextResponse.json(
-          { error: `Missing required field: ${field}` },
-          { status: 400 }
-        );
-      }
-    }
-    
-    // Create booking
-    const booking = await Booking.create({
-      tenant: userData.id,
-      property: data.propertyId,
-      startDate: new Date(data.startDate),
-      duration: data.duration,
-      message: data.message,
-      status: 'pending'
-    });
-    
-    // Populate the booking with related data
-    await booking.populate([
-      { path: 'property', select: 'title location price image landlordId' },
-      { path: 'tenant', select: 'name email phone avatar' }
-    ]);
-    
-    return NextResponse.json(booking, { status: 201 });
+
+    const booking = await Booking.create(body);
+    return NextResponse.json(booking);
   } catch (error) {
     console.error('Error creating booking:', error);
     return NextResponse.json(
-      { error: handleError(error) },
+      { error: 'Internal Server Error' },
       { status: 500 }
     );
   }

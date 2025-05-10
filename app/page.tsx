@@ -13,7 +13,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { translations } from '@/translations';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
-import { propertyService, Property } from '@/lib/api';
+import { Property } from '@/lib/api';
 import { handleError } from '@/lib/utils';
 
 // Define the Review interface
@@ -53,8 +53,14 @@ export default function Home() {
         setLoading(true);
         console.log('Attempting to fetch featured properties...');
         
-        // Fetch properties
-        const propertyData = await propertyService.getFeatured();
+        // Fetch featured properties using the dedicated API endpoint
+        const propertyResponse = await fetch('/api/properties/featured');
+        
+        if (!propertyResponse.ok) {
+          throw new Error(`Failed to fetch featured properties: ${propertyResponse.status}`);
+        }
+        
+        const propertyData = await propertyResponse.json();
         console.log('Fetched properties:', propertyData);
         
         if (propertyData && propertyData.length > 0) {

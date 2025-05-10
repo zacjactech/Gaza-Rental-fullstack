@@ -79,17 +79,41 @@ export interface PaginatedResponse<T> {
 
 // Helper function to ensure property data has valid image URLs
 function ensureValidPropertyImages(property: Property): Property {
+  const defaultImage = '/images/property-placeholder.jpg';
+  
   // Make sure the main image exists
-  if (!property.image) {
-    property.image = '/placeholder-property.jpg';
+  if (!property.image || !isValidImageUrl(property.image)) {
+    property.image = defaultImage;
   }
   
   // Make sure images array exists and is valid
   if (!property.images || !Array.isArray(property.images) || property.images.length === 0) {
     property.images = [property.image];
+  } else {
+    // Filter out invalid image URLs
+    property.images = property.images.filter(img => isValidImageUrl(img));
+    if (property.images.length === 0) {
+      property.images = [defaultImage];
+    }
   }
   
   return property;
+}
+
+// Helper function to validate image URLs
+function isValidImageUrl(url: string): boolean {
+  if (!url) return false;
+  
+  // Check if it's a valid URL or relative path
+  try {
+    if (url.startsWith('/')) {
+      return true; // Valid relative path
+    }
+    new URL(url);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 // Property service with caching and improved error handling

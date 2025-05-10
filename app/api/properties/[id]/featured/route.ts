@@ -3,6 +3,9 @@ import { connectToDatabase } from '@/lib/db';
 import Property from '@/lib/models/property';
 import { handleError } from '@/lib/utils';
 import { getCurrentUser } from '@/lib/utils/auth-utils';
+import { propertyService } from '@/lib/services/property-service';
+
+export const dynamic = 'force-dynamic';
 
 // PATCH /api/properties/:id/featured - Toggle featured status
 export async function PATCH(

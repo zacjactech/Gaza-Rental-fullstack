@@ -70,17 +70,17 @@ export default function EditPropertyPage() {
         const property = await response.json();
         
         setFormData({
-          title: property.title,
-          description: property.description,
-          location: property.location,
-          price: property.price,
-          status: property.status,
-          propertyType: property.type,
-          bedrooms: property.bedrooms,
-          bathrooms: property.bathrooms,
-          area: property.area,
-          features: property.amenities,
-          images: property.images
+          title: property.title || "",
+          description: property.description || "",
+          location: property.location || "",
+          price: property.price || 0,
+          status: property.status || "active",
+          propertyType: property.type || "apartment",
+          bedrooms: property.bedrooms || 1,
+          bathrooms: property.bathrooms || 1,
+          area: property.area || 0,
+          features: property.amenities || [],
+          images: property.images || []
         });
       } catch (err) {
         toast({

@@ -17,7 +17,9 @@ import {
   Share2,
   ArrowLeft,
   Square,
-  Check
+  Check,
+  MessageCircle,
+  Calendar
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -28,7 +30,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from '@/components/ui/use-toast';
 import { propertyService, Property as PropertyType } from '@/lib/api';
 import { Badge } from '@/components/ui/badge';
-import { Calendar } from '@/components/ui/calendar';
+import { Calendar as ReactCalendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format } from 'date-fns';
 import { Textarea } from '@/components/ui/textarea';
@@ -74,6 +76,7 @@ export default function PropertyDetail({ params }: { params: { id: string } }) {
   const [bookingDuration, setBookingDuration] = useState('12');
   const [paymentMethod, setPaymentMethod] = useState('mpesa');
   const [message, setMessage] = useState('');
+  const [actionMode, setActionMode] = useState<'book' | 'contact'>('book');
   
   // Store the ID in state when the component mounts
   useEffect(() => {
@@ -260,10 +263,59 @@ export default function PropertyDetail({ params }: { params: { id: string } }) {
       return;
     }
     
-    toast({
-      title: "Booking request sent",
-      description: `Your booking request for ${bookingDate.toLocaleDateString()} has been submitted.`,
-    });
+    try {
+      // Create booking data object
+      const bookingData = {
+        propertyId,
+        startDate: bookingDate.toISOString(),
+        duration: parseInt(bookingDuration),
+        paymentMethod,
+        amount: property.price * parseInt(bookingDuration),
+        currency: property.currency,
+        status: 'pending'
+      };
+      
+      // Send booking data to API
+      fetch('/api/bookings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(bookingData),
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Failed to create booking');
+        }
+        return response.json();
+      })
+      .then(() => {
+        toast({
+          title: "Booking request sent",
+          description: `Your booking request for ${bookingDate.toLocaleDateString()} has been submitted.`,
+        });
+        
+        // Reset form
+        setBookingDate(undefined);
+        setBookingDuration('12');
+        setPaymentMethod('mpesa');
+      })
+      .catch(error => {
+        console.error('Error creating booking:', error);
+        toast({
+          title: "Error",
+          description: "Failed to create booking. Please try again.",
+          variant: "destructive",
+        });
+      });
+    } catch (error) {
+      console.error('Error preparing booking data:', error);
+      toast({
+        title: "Error",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
   
   const handleSendMessage = (e: React.FormEvent) => {
@@ -277,11 +329,57 @@ export default function PropertyDetail({ params }: { params: { id: string } }) {
       return;
     }
     
-    toast({
-      title: "Message sent",
-      description: "Your message has been sent to the landlord.",
-    });
-    setMessage('');
+    try {
+      if (!property.landlordId || typeof property.landlordId !== 'object') {
+        throw new Error('Landlord information is not available');
+      }
+      
+      // Create message data object
+      const messageData = {
+        recipientId: property.landlordId._id || property.landlordId,
+        propertyId,
+        content: message,
+      };
+      
+      // Send message data to API
+      fetch('/api/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(messageData),
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Failed to send message');
+        }
+        return response.json();
+      })
+      .then(() => {
+        toast({
+          title: "Message sent",
+          description: "Your message has been sent to the landlord.",
+        });
+        
+        // Reset form
+        setMessage('');
+      })
+      .catch(error => {
+        console.error('Error sending message:', error);
+        toast({
+          title: "Error",
+          description: "Failed to send message. Please try again.",
+          variant: "destructive",
+        });
+      });
+    } catch (error) {
+      console.error('Error preparing message data:', error);
+      toast({
+        title: "Error",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
   
   const renderStars = (rating: number) => {
@@ -291,6 +389,11 @@ export default function PropertyDetail({ params }: { params: { id: string } }) {
         className={`h-4 w-4 ${index < rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
       />
     ));
+  };
+  
+  // Toggle between booking and contact
+  const toggleActionMode = () => {
+    setActionMode(prev => prev === 'book' ? 'contact' : 'book');
   };
   
   // Loading state
@@ -600,8 +703,28 @@ export default function PropertyDetail({ params }: { params: { id: string } }) {
                 )}
               </div>
 
+              {/* Action Buttons - Book or Contact */}
+              <div className="grid grid-cols-2 gap-3 mb-6">
+                <Button
+                  onClick={() => router.push(`/properties/${propertyId}/book`)}
+                  className="w-full bg-primary text-white hover:bg-primary/80"
+                  disabled={!property.available}
+                >
+                  <Calendar className="mr-2 h-4 w-4" />
+                  {getTranslation('property.booking.book', 'Book Now')}
+                </Button>
+                <Button
+                  onClick={() => router.push(`/properties/${propertyId}/contact`)}
+                  variant="outline"
+                  className="w-full"
+                >
+                  <MessageCircle className="mr-2 h-4 w-4" />
+                  {getTranslation('property.contact', 'Contact')}
+                </Button>
+              </div>
+
               {/* Booking Form */}
-              {property.available && (
+              {property.available && actionMode === 'book' && (
                 <div className="mt-4">
                   <form onSubmit={handleBookProperty}>
                     <div className="space-y-4">
@@ -623,7 +746,7 @@ export default function PropertyDetail({ params }: { params: { id: string } }) {
                               </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-auto p-0">
-                              <Calendar
+                              <ReactCalendar
                                 mode="single"
                                 selected={bookingDate}
                                 onSelect={setBookingDate}
@@ -706,118 +829,124 @@ export default function PropertyDetail({ params }: { params: { id: string } }) {
                 </div>
               )}
               
-              {/* Landlord Contact */}
-              <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                  {getTranslation('property.landlord', 'Contact Landlord')}
-                </h3>
-                
-                {/* Landlord Details */}
-                {property.landlordId && (
-                  <div className="flex items-start mb-4">
-                    <div className="relative h-12 w-12 rounded-full overflow-hidden mr-3 bg-gray-200 dark:bg-gray-700 flex-shrink-0">
-                      {property.landlordId.avatar ? (
-                        <Image
-                          src={property.landlordId.avatar}
-                          alt={property.landlordId.name}
-                          fill
-                          className="object-cover"
-                        />
-                      ) : (
-                        <div className="h-full w-full flex items-center justify-center bg-primary/10 text-primary">
-                          {property.landlordId.name?.charAt(0).toUpperCase() || 'U'}
-                        </div>
-                      )}
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-gray-900 dark:text-white flex items-center">
-                        {property.landlordId.name}
-                        {property.landlordId.verified && (
-                          <span className="ml-1 text-blue-500">
-                            <Check className="h-4 w-4" />
-                          </span>
-                        )}
-                      </h4>
-                      <div className="text-sm text-gray-600 dark:text-gray-400">
-                        {showContact ? (
-                          <>
-                            {property.landlordId.phone && (
-                              <div className="flex items-center mt-1">
-                                <Phone className="h-4 w-4 mr-1" />
-                                <a href={`tel:${property.landlordId.phone}`} className="hover:text-primary">
-                                  {property.landlordId.phone}
-                                </a>
-                              </div>
-                            )}
-                            {property.landlordId.email && (
-                              <div className="flex items-center mt-1">
-                                <Mail className="h-4 w-4 mr-1" />
-                                <a href={`mailto:${property.landlordId.email}`} className="hover:text-primary">
-                                  {property.landlordId.email}
-                                </a>
-                              </div>
-                            )}
-                          </>
+              {/* Landlord Contact - Show when contact mode is active */}
+              {actionMode === 'contact' && (
+                <div className="mt-4">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                    {getTranslation('property.landlord', 'Contact Landlord')}
+                  </h3>
+                  
+                  {/* Landlord Details */}
+                  {property.landlordId && (
+                    <div className="flex items-start mb-4">
+                      <div className="relative h-12 w-12 rounded-full overflow-hidden mr-3 bg-gray-200 dark:bg-gray-700 flex-shrink-0">
+                        {property.landlordId.avatar ? (
+                          <Image
+                            src={property.landlordId.avatar}
+                            alt={property.landlordId.name}
+                            fill
+                            className="object-cover"
+                          />
                         ) : (
-                          <Button 
-                            variant="link" 
-                            className="p-0 h-auto text-primary" 
-                            onClick={() => setShowContact(true)}
-                          >
-                            {getTranslation('property.showContact', 'Show contact details')}
-                          </Button>
+                          <div className="h-full w-full flex items-center justify-center bg-primary/10 text-primary">
+                            {property.landlordId.name?.charAt(0).toUpperCase() || 'U'}
+                          </div>
                         )}
                       </div>
+                      <div>
+                        <h4 className="font-medium text-gray-900 dark:text-white flex items-center">
+                          {property.landlordId.name}
+                          {property.landlordId.verified && (
+                            <span className="ml-1 text-blue-500">
+                              <Check className="h-4 w-4" />
+                            </span>
+                          )}
+                        </h4>
+                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                          {showContact ? (
+                            <>
+                              {property.landlordId.phone && (
+                                <div className="flex items-center mt-1">
+                                  <Phone className="h-4 w-4 mr-1" />
+                                  <a href={`tel:${property.landlordId.phone}`} className="hover:text-primary">
+                                    {property.landlordId.phone}
+                                  </a>
+                                </div>
+                              )}
+                              {property.landlordId.email && (
+                                <div className="flex items-center mt-1">
+                                  <Mail className="h-4 w-4 mr-1" />
+                                  <a href={`mailto:${property.landlordId.email}`} className="hover:text-primary">
+                                    {property.landlordId.email}
+                                  </a>
+                                </div>
+                              )}
+                            </>
+                          ) : (
+                            <Button 
+                              variant="link" 
+                              className="p-0 h-auto text-primary" 
+                              onClick={() => setShowContact(true)}
+                            >
+                              {getTranslation('property.showContact', 'Show contact details')}
+                            </Button>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                )}
-                
-                {/* Message Form */}
-                <form onSubmit={handleSendMessage}>
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="message">
-                        {getTranslation('property.message.label', 'Message to landlord')}
-                      </Label>
-                      <Textarea
-                        id="message"
-                        placeholder={getTranslation('property.message.placeholder', 'Hi, I am interested in this property...')}
-                        className="mt-1"
-                        value={message}
-                        onChange={(e) => setMessage(e.target.value)}
-                        rows={4}
-                      />
+                  )}
+                  
+                  {/* Message Form */}
+                  <form onSubmit={handleSendMessage}>
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="message">
+                          {getTranslation('property.message', 'Message')}
+                        </Label>
+                        <Textarea
+                          id="message"
+                          className="mt-1"
+                          placeholder={getTranslation('property.messagePlaceholder', 'Write your message here...')}
+                          value={message}
+                          onChange={(e) => setMessage(e.target.value)}
+                          rows={4}
+                          required
+                        />
+                      </div>
+                      <Button 
+                        type="submit" 
+                        className="w-full bg-primary text-white hover:bg-primary/80"
+                      >
+                        <Mail className="mr-2 h-4 w-4" />
+                        {getTranslation('property.sendMessage', 'Send Message')}
+                      </Button>
                     </div>
-                    <Button 
-                      type="submit" 
-                      className="w-full bg-transparent border-primary text-primary hover:bg-primary/10"
-                    >
-                      {getTranslation('property.message.send', 'Send Message')}
-                    </Button>
-                  </div>
-                </form>
-              </div>
+                  </form>
+                </div>
+              )}
               
               {/* Action Buttons */}
-              <div className="mt-6 flex space-x-2">
-                <Button
-                  variant="outline"
-                  className="w-1/2"
-                  onClick={handleSaveProperty}
-                >
-                  <Heart className={`mr-2 h-4 w-4 ${isSaved ? 'fill-red-500 text-red-500' : ''}`} />
-                  {isSaved 
-                    ? getTranslation('property.saved', 'Saved') 
-                    : getTranslation('property.save', 'Save')}
-                </Button>
-                <Button
-                  variant="outline"
-                  className="w-1/2"
-                  onClick={handleShareProperty}
-                >
-                  <Share2 className="mr-2 h-4 w-4" />
-                  {getTranslation('property.share', 'Share')}
-                </Button>
+              <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                <div className="flex space-x-2">
+                  <Button
+                    variant="outline"
+                    className="w-1/2"
+                    onClick={handleSaveProperty}
+                  >
+                    <Heart className={`mr-2 h-4 w-4 ${isSaved ? 'fill-red-500 text-red-500' : ''}`} />
+                    {isSaved 
+                      ? getTranslation('property.saved', 'Saved') 
+                      : getTranslation('property.save', 'Save')}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="w-1/2"
+                    onClick={handleShareProperty}
+                  >
+                    <Share2 className="mr-2 h-4 w-4" />
+                    {getTranslation('property.share', 'Share')}
+                  </Button>
+                </div>
               </div>
             </div>
           </div>

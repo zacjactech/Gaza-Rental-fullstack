@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { shouldSkipDbConnection, logSkippedConnection } from './db-skip';
 
 // Connection status tracking
 interface ConnectionStatus {
@@ -38,6 +39,15 @@ if (!global.mongoConnection) {
  * @returns Mongoose instance
  */
 export async function connectToDatabase(): Promise<typeof mongoose> {
+  // Skip database connection during build or if explicitly disabled
+  if (shouldSkipDbConnection() || process.env.NEXT_PHASE === 'phase-production-build') {
+    logSkippedConnection();
+    // Return a mock mongoose instance
+    global.mongoConnection.status.isConnected = true;
+    global.mongoConnection.conn = mongoose;
+    return mongoose;
+  }
+
   // If we're already connected, return the existing connection
   if (global.mongoConnection.conn) {
     if (mongoose.connection.readyState === 1) {
@@ -160,6 +170,11 @@ export function getConnectionStatus(): ConnectionStatus {
  * Close the database connection
  */
 export async function disconnectFromDatabase(): Promise<void> {
+  // Skip if we're in build mode
+  if (shouldSkipDbConnection()) {
+    return;
+  }
+  
   try {
     if (global.mongoConnection.conn) {
       await mongoose.connection.close();

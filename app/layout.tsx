@@ -1,6 +1,5 @@
 import './globals.css';
 import type { Metadata, Viewport } from 'next';
-import { Inter } from 'next/font/google';
 import Header from '@/components/Header';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { LanguageProvider } from '@/contexts/LanguageContext';
@@ -12,13 +11,8 @@ import { Suspense } from 'react';
 import ClientScrollToTop from './components/client/ClientScrollToTop';
 import DatabaseInitializerWrapper from './components/client/DatabaseInitializerWrapper';
 
-const inter = Inter({ 
-  subsets: ['latin'],
-  display: 'swap', // Ensures text is visible during font loading
-  variable: '--font-inter',
-  preload: true,
-  fallback: ['system-ui', 'sans-serif'],
-});
+// Define CSS variable for system fonts
+const systemFontClass = 'font-system';
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -44,8 +38,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        {/* Remove Google Fonts preconnect links */}
         <link rel="preconnect" href="https://images.pexels.com" />
         <link rel="dns-prefetch" href="https://images.pexels.com" />
         <link rel="dns-prefetch" href="https://images.unsplash.com" />
@@ -65,8 +58,15 @@ export default function RootLayout({
             })();
           `
         }} />
+        <style>
+          {`
+            .font-system {
+              font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            }
+          `}
+        </style>
       </head>
-      <body className={`${inter.className} antialiased`}>
+      <body className={`${systemFontClass} antialiased`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="light"

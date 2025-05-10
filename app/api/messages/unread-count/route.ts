@@ -3,6 +3,8 @@ import { Message } from '@/lib/models/message';
 import { handleError } from '@/lib/utils';
 import { withDatabase } from '@/lib/utils/api-utils';
 
+export const dynamic = 'force-dynamic';
+
 // GET /api/messages/unread-count - Get the number of unread messages for the current user
 export const GET = withDatabase(async (req: Request, token, userData) => {
   try {

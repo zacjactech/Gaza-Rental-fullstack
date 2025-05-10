@@ -1,9 +1,16 @@
 import { connectToDatabase } from './db';
+import { shouldSkipDbConnection, logSkippedConnection } from './db-skip';
 
 // Initialize database connection
 let connectionPromise: Promise<any> | null = null;
 
-export function initializeDatabase() {
+export async function initializeDatabase() {
+  // Skip database connection during build
+  if (shouldSkipDbConnection()) {
+    logSkippedConnection();
+    return Promise.resolve(true);
+  }
+
   if (!connectionPromise) {
     connectionPromise = connectToDatabase()
       .then(() => {
@@ -29,4 +36,7 @@ export function getConnectionPromise() {
 }
 
 // Initialize the connection immediately when this module is imported
-initializeDatabase(); 
+// Only if we're not in a build environment
+if (!shouldSkipDbConnection()) {
+  initializeDatabase();
+} 

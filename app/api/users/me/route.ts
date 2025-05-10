@@ -4,6 +4,11 @@ import { handleError } from '@/lib/utils';
 import { connectToDatabase } from '@/lib/db';
 import { verifyToken } from '@/lib/services/auth-service';
 
+// Force dynamic rendering for this API route
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 /**
  * GET /api/users/me - Get current authenticated user
  * Returns the current user's data based on their authentication token

@@ -4,6 +4,8 @@ import Property from '@/lib/models/property';
 import { handleError } from '@/lib/utils';
 import { verifyToken } from '@/lib/services/auth-service';
 
+export const dynamic = 'force-dynamic';
+
 // GET /api/properties/landlord - Get properties for the current landlord
 export async function GET(request: Request) {
   try {

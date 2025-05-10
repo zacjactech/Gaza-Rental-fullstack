@@ -33,67 +33,21 @@ export async function GET(request: Request) {
       query.rating = parseInt(rating);
     }
     
-    // Get reviews and populate in a single aggregation pipeline
-    const reviews = await Review.aggregate([
-      { $match: query },
-      { $sort: { createdAt: -1 } },
-      { $limit: limit },
-      {
-        $lookup: {
-          from: 'users',
-          localField: 'userId',
-          foreignField: '_id',
-          as: 'userArray'
-        }
-      },
-      {
-        $lookup: {
-          from: 'properties',
-          localField: 'propertyId',
-          foreignField: '_id',
-          as: 'propertyArray'
-        }
-      },
-      {
-        $addFields: {
-          user: { $arrayElemAt: ['$userArray', 0] },
-          property: { $arrayElemAt: ['$propertyArray', 0] }
-        }
-      },
-      {
-        $project: {
-          _id: 1,
-          userId: 1,
-          propertyId: 1,
-          rating: 1,
-          content: 1,
-          createdAt: 1,
-          updatedAt: 1,
-          user: 1,
-          property: 1
-        }
-      },
-      {
-        $project: {
-          _id: 1,
-          userId: 1,
-          propertyId: 1,
-          rating: 1,
-          content: 1,
-          createdAt: 1,
-          updatedAt: 1,
-          'user._id': 1,
-          'user.name': 1,
-          'user.email': 1,
-          'user.avatar': 1,
-          'property._id': 1,
-          'property.title': 1,
-          'property.image': 1
-        }
-      }
-    ]);
-    
-    return NextResponse.json(reviews);
+    const reviews = await Review.find(query)
+      .populate('userId', 'name email avatar')
+      .populate('propertyId', 'title images location')
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .lean();
+
+    return NextResponse.json(reviews.map((review: any) => ({
+      ...review,
+      _id: review._id.toString(),
+      userId: typeof review.userId === 'object' ? review.userId._id.toString() : review.userId,
+      propertyId: typeof review.propertyId === 'object' ? review.propertyId._id.toString() : review.propertyId,
+      createdAt: review.createdAt?.toISOString(),
+      updatedAt: review.updatedAt?.toISOString()
+    })));
   } catch (error) {
     console.error('Error fetching reviews:', error);
     return NextResponse.json(

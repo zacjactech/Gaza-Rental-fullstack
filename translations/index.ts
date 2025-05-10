@@ -247,20 +247,10 @@ export const translations: TranslationType = {
       subtitle: 'Real experiences from our community',
       viewAll: 'View All Reviews',
       items: {
-        john_doe: {
-          name: 'Example Tenant',
-          role: 'Tenant',
-          comment: 'Example of a positive tenant experience on the platform.'
-        },
-        mary_smith: {
-          name: 'Example Landlord',
-          role: 'Landlord',
-          comment: 'Example of a positive landlord experience on the platform.'
-        },
-        james_wilson: {
-          name: 'Example Customer',
-          role: 'Tenant',
-          comment: 'Example of customer feedback about the service quality.'
+        default: {
+          name: 'Our Community',
+          role: 'User',
+          comment: 'Join our community and share your experience with GazaRenter.'
         }
       }
     },
@@ -734,20 +724,10 @@ export const translations: TranslationType = {
       subtitle: 'Uzoefu halisi kutoka kwa jamii yetu',
       viewAll: 'Angalia Maoni Yote',
       items: {
-        john_doe: {
-          name: 'Example Tenant',
-          role: 'Mpangaji',
-          comment: 'Example of a positive tenant experience on the platform.'
-        },
-        mary_smith: {
-          name: 'Example Landlord',
-          role: 'Mmiliki',
-          comment: 'Example of a positive landlord experience on the platform.'
-        },
-        james_wilson: {
-          name: 'Example Customer',
-          role: 'Mpangaji',
-          comment: 'Example of customer feedback about the service quality.'
+        default: {
+          name: 'Our Community',
+          role: 'User',
+          comment: 'Join our community and share your experience with GazaRenter.'
         }
       }
     },

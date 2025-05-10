@@ -8,6 +8,13 @@ export default function DatabaseInitializer() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Skip database initialization during build time
+    if (process.env.NEXT_PUBLIC_SKIP_DB_CONNECTION === 'true' || process.env.NEXT_PHASE === 'phase-production-build') {
+      console.log('Skipping database initialization during build');
+      setStatus('connected');
+      return;
+    }
+
     const initDB = async () => {
       try {
         console.log('Initializing database connection...');

@@ -132,7 +132,7 @@ const MapComponent = ({
       document.head.removeChild(styleElement);
       // Don't remove the Leaflet CSS as it might be used by other components
     };
-  }, []);
+  }, [mapStyles]);
 
   // Track component mount status
   useEffect(() => {
@@ -362,7 +362,7 @@ const MapComponent = ({
     return () => {
       clearTimeout(initTimeout);
     };
-  }, [properties, markers, center, zoom, onPropertySelect, onLoad, onError, hasError, isMapInitialized, attempts]);
+  }, [properties, markers, center, zoom, onPropertySelect, onLoad, onError, hasError, isMapInitialized, attempts, mapStyles]);
 
   return (
     <div className="relative h-full w-full bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden">

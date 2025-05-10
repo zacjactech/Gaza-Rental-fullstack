@@ -52,19 +52,19 @@ export default function ContactPage() {
     setIsLoading(true);
 
     try {
-      // TODO: Replace with actual API call to send email
-      // Example implementation:
-      // const response = await fetch('/api/contact', {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify(formData),
-      // });
-      // if (!response.ok) throw new Error('Failed to send message');
-      
-      // Temporary simulation for demo purposes
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to send message');
+      }
       
       toast({
         title: "Success!",
@@ -82,7 +82,7 @@ export default function ContactPage() {
     } catch (error) {
       toast({
         title: "Error",
-        description: contactStrings.error,
+        description: error instanceof Error ? error.message : contactStrings.error,
         variant: "destructive",
       });
     } finally {

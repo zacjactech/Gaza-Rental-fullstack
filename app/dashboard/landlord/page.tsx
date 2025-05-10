@@ -135,18 +135,19 @@ export default function LandlordDashboardPage() {
         const messagesData = await messagesResponse.json();
         
         // Set state with fetched data
-        setProperties(propertiesData.properties || propertiesData);
+        const propertyData = propertiesData.properties || propertiesData;
+        setProperties(propertyData);
         setApplications(bookingsData);
         setMessages(messagesData);
         
         // Calculate stats
-        const active = (propertiesData.properties || propertiesData).filter((p: any) => p.isAvailable).length;
-        const inactive = (propertiesData.properties || propertiesData).length - active;
+        const active = propertyData.filter((p: any) => p.isAvailable).length;
+        const inactive = propertyData.length - active;
         
         setActiveProperties(active);
         setInactiveProperties(inactive);
         setTotalApplications(bookingsData.length);
-        setOccupancyRate((propertiesData.properties || propertiesData).length > 0 ? Math.round((active / (propertiesData.properties || propertiesData).length) * 100) : 0);
+        setOccupancyRate(propertyData.length > 0 ? Math.round((active / propertyData.length) * 100) : 0);
         setUnreadMessages(messagesData.filter((m: any) => !m.isRead).length);
       } catch (err) {
         console.error('Error fetching dashboard data:', err);
@@ -246,8 +247,8 @@ export default function LandlordDashboardPage() {
                   <div className="relative h-48">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img 
-                      src={property.image} 
-                      alt={property.title}
+                      src={property.image || '/placeholder-property.jpg'} 
+                      alt={property.title || 'Property'}
                       className="object-cover w-full h-full"
                     />
                     <div className="absolute top-2 right-2">
@@ -256,17 +257,22 @@ export default function LandlordDashboardPage() {
                       </Badge>
                     </div>
                     <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
-                      <p className="text-white font-medium">{property.price.toLocaleString()} TZS/month</p>
+                      <p className="text-white font-medium">{property.price ? property.price.toLocaleString() : '0'} TZS/month</p>
                     </div>
                   </div>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-lg">{property.title}</CardTitle>
-                    <CardDescription>{property.location}</CardDescription>
+                    <CardTitle className="text-lg">{property.title || 'Untitled Property'}</CardTitle>
+                    <CardDescription>{property.location || 'No location specified'}</CardDescription>
                   </CardHeader>
                   <CardContent className="pt-0">
                     <div className="flex justify-between items-center">
                       <p className="text-sm">
-                        {applications.filter(app => app.property.id === property.id || app.property._id === property._id).length} applications
+                        {applications.filter(app => 
+                          (app.property?.id === property.id) || 
+                          (app.property?._id === property._id) ||
+                          (app.propertyId === property.id) ||
+                          (app.propertyId === property._id)
+                        ).length} applications
                       </p>
                       <Button 
                         variant="outline" 
@@ -296,20 +302,20 @@ export default function LandlordDashboardPage() {
               ) : (
                 <div className="space-y-4">
                   {applications.slice(0, 5).map((application) => (
-                    <div key={`application-${application.id}`} className="flex items-center space-x-4">
+                    <div key={`application-${application._id || application.id}`} className="flex items-center space-x-4">
                       <div className="w-20 h-20 rounded-md overflow-hidden">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img 
-                          src={application.property.image} 
-                          alt={application.property.title}
+                          src={application.property?.image || '/placeholder-property.jpg'} 
+                          alt={application.property?.title || 'Property'}
                           className="w-full h-full object-cover"
                         />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{application.tenant.name}</p>
-                        <p className="text-xs text-muted-foreground truncate">{application.property.title}</p>
+                        <p className="text-sm font-medium truncate">{application.tenant?.name || application.user?.name || 'Tenant'}</p>
+                        <p className="text-xs text-muted-foreground truncate">{application.property?.title || 'Property'}</p>
                         <p className="text-xs text-muted-foreground">
-                          Applied on {new Date(application.createdAt).toLocaleDateString()}
+                          Applied on {application.createdAt ? new Date(application.createdAt).toLocaleDateString() : 'Unknown date'}
                         </p>
                       </div>
                       <Badge variant={
@@ -317,7 +323,7 @@ export default function LandlordDashboardPage() {
                         application.status === "rejected" ? "destructive" : 
                         "outline"
                       }>
-                        {application.status.charAt(0).toUpperCase() + application.status.slice(1)}
+                        {application.status ? application.status.charAt(0).toUpperCase() + application.status.slice(1) : 'Pending'}
                       </Badge>
                     </div>
                   ))}
@@ -351,16 +357,17 @@ export default function LandlordDashboardPage() {
               ) : (
                 <div className="space-y-4">
                   {messages.slice(0, 5).map((message) => (
-                    <div key={`message-${message.id}`} className="flex items-start space-x-4">
+                    <div key={`message-${message._id || message.id}`} className="flex items-start space-x-4">
                       <div className={`w-2 h-2 mt-2 rounded-full ${message.isRead ? 'bg-gray-300' : 'bg-blue-500'}`} />
                       <div className="flex-1">
                         <div className="flex justify-between">
-                          <p className="text-sm font-medium">{message.sender.name}</p>
+                          <p className="text-sm font-medium">{message.sender?.name || 'Unknown Sender'}</p>
                           <p className="text-xs text-muted-foreground">
-                            {new Date(message.timestamp).toLocaleDateString()}
+                            {message.timestamp ? new Date(message.timestamp).toLocaleDateString() : 
+                             message.createdAt ? new Date(message.createdAt).toLocaleDateString() : 'Unknown date'}
                           </p>
                         </div>
-                        <p className="text-sm truncate">{message.content}</p>
+                        <p className="text-sm truncate">{message.content || ''}</p>
                       </div>
                     </div>
                   ))}

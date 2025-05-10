@@ -3,6 +3,8 @@ import { authService } from '@/lib/services/auth-service';
 import { handleError } from '@/lib/utils';
 import { connectToDatabase } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 // GET /api/auth/me - Get current user
 export async function GET(request: Request) {
   try {
