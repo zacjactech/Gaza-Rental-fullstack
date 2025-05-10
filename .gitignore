@@ -12,6 +12,9 @@
 # next.js
 /.next/
 /out/
+.next/
+next.config.mjs.bak
+temp-next.config.mjs
 
 # production
 /build
@@ -46,8 +49,6 @@ next-env.d.ts
 *.sublime-workspace
 
 # OS generated files
-.DS_Store
-.DS_Store?
 ._*
 .Spotlight-V100
 .Trashes
@@ -66,3 +67,12 @@ logs
 
 # Build artifacts
 dist/
+
+# Temporary files
+*.tmp
+*.temp
+*~
+
+# Don't ignore these files
+!public/placeholder-property.jpg
+!public/placeholder-user.jpg

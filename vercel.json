@@ -51,7 +51,6 @@
     {
       "src": "/dashboard/(.*)",
       "dest": "/dashboard/$1",
-      "continue": true,
       "has": [
         {
           "type": "cookie",
