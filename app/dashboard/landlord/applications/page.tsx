@@ -171,7 +171,7 @@ function ClientApplicationsPage() {
                           className="object-cover w-full h-full"
                         />
                       </div>
-                      <div>
+                          <div>
                         <div className="font-medium">{application.property.title || 'Untitled Property'}</div>
                         <div className="text-sm text-gray-500">{application.property.location || 'No location'}</div>
                       </div>
@@ -186,7 +186,7 @@ function ClientApplicationsPage() {
                           className="object-cover w-full h-full"
                         />
                       </div>
-                      <div>
+                          <div>
                         <div className="font-medium">{application.user?.name || 'Unknown User'}</div>
                         <div className="text-sm text-gray-500">{application.user?.email || 'No email'}</div>
                       </div>
@@ -231,7 +231,7 @@ function ClientApplicationsPage() {
               ))}
             </tbody>
           </table>
-        </div>
+            </div>
       </div>
     </div>
   );

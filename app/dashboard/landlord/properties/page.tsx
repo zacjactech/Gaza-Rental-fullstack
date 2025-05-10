@@ -230,7 +230,7 @@ function ClientPropertiesPage() {
             </tbody>
           </table>
         </div>
-      </div>
+          </div>
     </div>
   );
 }
